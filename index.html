@@ -24,6 +24,87 @@
         .game-over {
             background: rgba(0, 0, 0, 0.8);
         }
+        
+        /* Neon effect styles */
+        .neon-red {
+            background: linear-gradient(45deg, #ff0000, #ff6666);
+            box-shadow: 0 0 20px #ff0000, inset 0 0 20px rgba(255, 0, 0, 0.2);
+            border: 2px solid #ff0000;
+        }
+        .neon-green {
+            background: linear-gradient(45deg, #00ff00, #66ff66);
+            box-shadow: 0 0 20px #00ff00, inset 0 0 20px rgba(0, 255, 0, 0.2);
+            border: 2px solid #00ff00;
+        }
+        .neon-blue {
+            background: linear-gradient(45deg, #0000ff, #6666ff);
+            box-shadow: 0 0 20px #0000ff, inset 0 0 20px rgba(0, 0, 255, 0.2);
+            border: 2px solid #0000ff;
+        }
+        .neon-yellow {
+            background: linear-gradient(45deg, #ffff00, #ffff66);
+            box-shadow: 0 0 20px #ffff00, inset 0 0 20px rgba(255, 255, 0, 0.2);
+            border: 2px solid #ffff00;
+        }
+        .neon-orange {
+            background: linear-gradient(45deg, #ff8800, #ffaa66);
+            box-shadow: 0 0 20px #ff8800, inset 0 0 20px rgba(255, 136, 0, 0.2);
+            border: 2px solid #ff8800;
+        }
+        .neon-purple {
+            background: linear-gradient(45deg, #8800ff, #aa66ff);
+            box-shadow: 0 0 20px #8800ff, inset 0 0 20px rgba(136, 0, 255, 0.2);
+            border: 2px solid #8800ff;
+        }
+        
+        /* Glass effect styles */
+        .glass-red {
+            background: rgba(220, 38, 38, 0.2);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(220, 38, 38, 0.3);
+            box-shadow: 0 8px 32px rgba(220, 38, 38, 0.1);
+        }
+        .glass-green {
+            background: rgba(34, 197, 94, 0.2);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(34, 197, 94, 0.3);
+            box-shadow: 0 8px 32px rgba(34, 197, 94, 0.1);
+        }
+        .glass-blue {
+            background: rgba(59, 130, 246, 0.2);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            box-shadow: 0 8px 32px rgba(59, 130, 246, 0.1);
+        }
+        .glass-yellow {
+            background: rgba(234, 179, 8, 0.2);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(234, 179, 8, 0.3);
+            box-shadow: 0 8px 32px rgba(234, 179, 8, 0.1);
+        }
+        .glass-orange {
+            background: rgba(249, 115, 22, 0.2);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(249, 115, 22, 0.3);
+            box-shadow: 0 8px 32px rgba(249, 115, 22, 0.1);
+        }
+        .glass-purple {
+            background: rgba(147, 51, 234, 0.2);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(147, 51, 234, 0.3);
+            box-shadow: 0 8px 32px rgba(147, 51, 234, 0.1);
+        }
+        
+        .neon-active {
+            filter: brightness(1.8) saturate(1.5);
+            box-shadow: 0 0 30px currentColor, inset 0 0 30px rgba(255, 255, 255, 0.3);
+        }
+        
+        .glass-active {
+            filter: brightness(1.5);
+            backdrop-filter: blur(5px);
+            box-shadow: 0 0 25px rgba(255, 255, 255, 0.5);
+        }
     </style>
 </head>
 <body class="bg-gray-900 text-white min-h-screen flex items-center justify-center p-4">
@@ -35,14 +116,21 @@
         const SimonGame = () => {
             // Game settings
             const difficulties = {
-                beginner: { colors: ['red', 'green', 'blue'], name: 'Beginner' },
-                intermediate: { colors: ['red', 'green', 'blue', 'yellow'], name: 'Intermediate' },
-                hard: { colors: ['red', 'green', 'blue', 'yellow', 'orange', 'purple'], name: 'Hard' }
+                beginner: { colors: ['red', 'green', 'blue'], name: 'Beginner', speedMultiplier: 1 },
+                intermediate: { colors: ['red', 'green', 'blue', 'yellow'], name: 'Intermediate', speedMultiplier: 1.2 },
+                hard: { colors: ['red', 'green', 'blue', 'yellow', 'orange', 'purple'], name: 'Hard', speedMultiplier: 1.5 }
+            };
+
+            const textureOptions = {
+                regular: { name: 'Regular', description: 'Classic solid colors' },
+                neon: { name: 'Neon', description: 'Glowing neon effects' },
+                glass: { name: 'Glass', description: 'Translucent glass look' }
             };
 
             // Game state
-            const [gameState, setGameState] = useState('menu'); // menu, playing, gameover
+            const [gameState, setGameState] = useState('menu'); 
             const [difficulty, setDifficulty] = useState(null);
+            const [texture, setTexture] = useState('regular');
             const [sequence, setSequence] = useState([]);
             const [userSequence, setUserSequence] = useState([]);
             const [activeButton, setActiveButton] = useState(null);
@@ -112,7 +200,7 @@
                     const randomColor = selected.colors[Math.floor(Math.random() * selected.colors.length)];
                     const newSeq = [randomColor];
                     setSequence(newSeq);
-                    playSequence(newSeq);
+                    playSequence(newSeq, selected.speedMultiplier);
                 }, 1000);
             };
 
@@ -124,33 +212,43 @@
                 setSequence(prevSeq => {
                     const newSeq = [...prevSeq, newColor];
                     // Play the sequence after state update
-                    setTimeout(() => playSequence(newSeq), 100);
+                    setTimeout(() => playSequence(newSeq, difficulty.speedMultiplier), 100);
                     return newSeq;
                 });
                 setUserSequence([]);
             }, [difficulty]);
 
-            // Play the current sequence
-            const playSequence = useCallback((seq) => {
+            // Play the current sequence with speed based on difficulty
+            const playSequence = useCallback((seq, speedMultiplier = 1) => {
                 setIsPlayingSequence(true);
                 setAcceptingInput(false);
                 setMessage('Watch the sequence...');
                 setActiveButton(null);
                 
+                // timing based on speed multiplier
+                const baseInterval = 800; 
+                const baseActiveDuration = 500; 
+                const baseStartDelay = 500; 
+                
+                const interval = Math.round(baseInterval / speedMultiplier);
+                const activeDuration = Math.round(baseActiveDuration / speedMultiplier);
+                const startDelay = Math.round(baseStartDelay / speedMultiplier);
+                
                 seq.forEach((color, index) => {
                     setTimeout(() => {
                         setActiveButton(color);
                         playSound(color);
-                        setTimeout(() => setActiveButton(null), 500);
-                    }, (index) * 800 + 500);
+                        setTimeout(() => setActiveButton(null), activeDuration);
+                    }, (index) * interval + startDelay);
                 });
 
+                const totalDuration = seq.length * interval + startDelay + Math.round(500 / speedMultiplier);
                 setTimeout(() => {
                     setIsPlayingSequence(false);
                     setAcceptingInput(true);
                     setMessage('Your turn! Repeat the sequence');
                     setActiveButton(null);
-                }, seq.length * 800 + 1000);
+                }, totalDuration);
             }, [playSound]);
 
             // Handle button click
@@ -204,30 +302,76 @@
                 setActiveButton(null);
             };
 
+            // Get button classes based on texture
+            const getButtonClasses = (color) => {
+                const baseClasses = `w-20 h-20 md:w-24 md:h-24 rounded-full m-2 transition-all duration-200 flex items-center justify-center text-white font-bold text-xl cursor-pointer select-none`;
+                const isDisabled = isPlayingSequence || !acceptingInput;
+                
+                let textureClasses = '';
+                let activeClasses = '';
+                
+                switch (texture) {
+                    case 'neon':
+                        textureClasses = `neon-${color}`;
+                        activeClasses = activeButton === color ? 'neon-active' : '';
+                        break;
+                    case 'glass':
+                        textureClasses = `glass-${color}`;
+                        activeClasses = activeButton === color ? 'glass-active' : '';
+                        break;
+                    default: // regular
+                        const colorClasses = {
+                            red: 'bg-red-600 hover:bg-red-500',
+                            green: 'bg-green-600 hover:bg-green-500',
+                            blue: 'bg-blue-600 hover:bg-blue-500',
+                            yellow: 'bg-yellow-500 hover:bg-yellow-400',
+                            orange: 'bg-orange-500 hover:bg-orange-400',
+                            purple: 'bg-purple-600 hover:bg-purple-500'
+                        };
+                        textureClasses = colorClasses[color];
+                        activeClasses = activeButton === color ? 'button-active' : '';
+                }
+                
+                return `${baseClasses} ${textureClasses} ${activeClasses} ${isDisabled ? 'opacity-60 cursor-not-allowed' : ''}`;
+            };
+
             // Button component
             const GameButton = ({ color }) => {
-                const baseClasses = `w-20 h-20 md:w-24 md:h-24 rounded-full m-2 transition-all duration-200 flex items-center justify-center text-white font-bold text-xl cursor-pointer select-none`;
-                const colorClasses = {
-                    red: 'bg-red-600 hover:bg-red-500',
-                    green: 'bg-green-600 hover:bg-green-500',
-                    blue: 'bg-blue-600 hover:bg-blue-500',
-                    yellow: 'bg-yellow-500 hover:bg-yellow-400',
-                    orange: 'bg-orange-500 hover:bg-orange-400',
-                    purple: 'bg-purple-600 hover:bg-purple-500'
-                };
-
                 const isDisabled = isPlayingSequence || !acceptingInput;
                 
                 return (
                     <button
-                        className={`${baseClasses} ${colorClasses[color]} ${
-                            activeButton === color ? 'button-active' : ''
-                        } ${isDisabled ? 'opacity-60 cursor-not-allowed' : ''}`}
+                        className={getButtonClasses(color)}
                         onClick={() => handleButtonClick(color)}
                         disabled={isDisabled}
                     >
                         {color.charAt(0).toUpperCase() + color.slice(1)}
                     </button>
+                );
+            };
+
+            // Texture selector component
+            const TextureSelector = () => {
+                return (
+                    <div className="mb-6">
+                        <h3 className="text-lg font-semibold mb-3">Button Style</h3>
+                        <div className="flex flex-wrap justify-center gap-2">
+                            {Object.entries(textureOptions).map(([key, { name, description }]) => (
+                                <button
+                                    key={key}
+                                    className={`px-4 py-2 rounded-lg transition-colors text-sm font-medium ${
+                                        texture === key
+                                            ? 'bg-purple-600 text-white'
+                                            : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                                    }`}
+                                    onClick={() => setTexture(key)}
+                                    title={description}
+                                >
+                                    {name}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
                 );
             };
 
@@ -239,6 +383,8 @@
                             Flash Back!
                         </h1>
                         <p className="text-xl mb-8">{message}</p>
+                        
+                        <TextureSelector />
                         
                         <div className="grid grid-cols-1 gap-4 max-w-md mx-auto">
                             {Object.entries(difficulties).map(([key, { name, colors }]) => (
@@ -260,6 +406,25 @@
                                 </button>
                             ))}
                         </div>
+                        
+                        {/* Preview of current texture */}
+                        <div className="mt-8">
+                            <p className="text-sm text-gray-400 mb-4">Preview: {textureOptions[texture].name}</p>
+                            <div className="flex justify-center">
+                                {['red', 'green', 'blue'].map(color => (
+                                    <div
+                                        key={color}
+                                        className={`w-12 h-12 rounded-full m-1 flex items-center justify-center text-white text-xs font-bold ${
+                                            texture === 'neon' ? `neon-${color}` :
+                                            texture === 'glass' ? `glass-${color}` :
+                                            `bg-${color}-600`
+                                        }`}
+                                    >
+                                        {color.charAt(0).toUpperCase()}
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
                     </div>
                 );
             }
@@ -272,6 +437,7 @@
                             <div className="bg-gray-800 p-8 rounded-lg max-w-md w-full mx-4">
                                 <h2 className="text-3xl font-bold mb-4">Game Over!</h2>
                                 <p className="text-xl mb-2">Difficulty: {difficulty?.name}</p>
+                                <p className="text-xl mb-2">Style: {textureOptions[texture].name}</p>
                                 <p className="text-xl mb-6">Your score: {score}</p>
                                 <button
                                     className="px-6 py-3 bg-pink-600 rounded-lg hover:bg-pink-500 transition-colors text-lg font-medium w-full"
@@ -294,6 +460,7 @@
                     
                     <div className="mb-6">
                         <p className="text-xl mb-2">Difficulty: {difficulty?.name}</p>
+                        <p className="text-xl mb-2">Style: {textureOptions[texture].name}</p>
                         <p className="text-xl mb-2">Score: {score}</p>
                         <p className="text-xl mb-2">Round: {sequence.length}</p>
                         <p className="text-lg text-gray-300">{message}</p>
